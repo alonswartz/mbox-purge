@@ -1,0 +1,383 @@
+<HTML>
+<HEAD>
+<TITLE>mbox-purge - perform batch deletion of mail messages from mbox files</TITLE>
+<LINK REV="made" HREF="mailto:root@ibcinc.com">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+<!--
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#DESCRIPTION">DESCRIPTION</A>
+	<LI><A HREF="#OPTIONS_GENERAL">OPTIONS - GENERAL</A>
+	<LI><A HREF="#OPTIONS_MESSAGE_SELECTION">OPTIONS - MESSAGE SELECTION</A>
+	<LI><A HREF="#CONVENIENCE_SUBS">CONVENIENCE SUBS</A>
+	<LI><A HREF="#EXAMPLES">EXAMPLES</A>
+	<LI><A HREF="#BUGS">BUGS</A>
+	<LI><A HREF="#CHANGES">CHANGES</A>
+	<LI><A HREF="#AUTHOR">AUTHOR</A>
+</UL>
+-->
+<!-- INDEX END -->
+
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+mbox-purge - perform batch deletion of mail messages from mbox files
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<STRONG>mbox-purge</STRONG>
+[<STRONG>--copy-to</STRONG>  <EM>file</EM>] [<STRONG>--debug</STRONG>] [<STRONG>--help</STRONG>] [<STRONG>--newline</STRONG>  <EM>s</EM>] [<STRONG>--newline-native</STRONG>] [<STRONG>--no</STRONG>] [<STRONG>-n</STRONG>] [<STRONG>--quiet</STRONG>] [<STRONG>--verbose</STRONG>] [<STRONG>--version</STRONG>] [<STRONG>--before</STRONG>  <EM>date-time</EM>] [<STRONG>--before-or-at</STRONG>  <EM>date-time</EM>] [<STRONG>--after</STRONG>  <EM>date-time</EM>] [<STRONG>--after-or-at</STRONG>  <EM>date-time</EM>] [<STRONG>--pattern</STRONG>  <EM>pat</EM>] [<STRONG>--head-pattern</STRONG>  <EM>pat</EM>] [<STRONG>--body-pattern</STRONG>  <EM>pat</EM>] [<STRONG>--eval</STRONG>  <EM>code</EM>] [<STRONG>--head-eval</STRONG>  <EM>code</EM>]
+<EM>file</EM>...
+
+<P>
+<HR>
+<H1><A NAME="DESCRIPTION">DESCRIPTION</A></H1>
+<P>
+<STRONG>mbox-purge</STRONG> performs batch deletion of email messages from mbox format files based on
+rules you specify. It uses <EM>file.lock</EM>-style locking (using <STRONG>procmail</STRONG>'s <STRONG>lockfile</STRONG> under the hood). Because of this you have to have write permission in the
+directory in which the <EM>file</EM>
+being processed is stored.
+
+<P>
+The file to be processed can be in mbox, mboxrd, mboxcl, mboxcl2 or buggy
+Elm mboxcl2 format. The data written will always be in mboxrd format. See
+<A
+HREF="http://www.qmail.org/qmail-manual-html/man5/mbox.html">http://www.qmail.org/qmail-manual-html/man5/mbox.html</A>
+for an explanation of these terms.
+
+<P>
+<HR>
+<H1><A NAME="OPTIONS_GENERAL">OPTIONS - GENERAL</A></H1>
+<DL>
+<DT><STRONG><A NAME="item__copy_to">--copy-to file</A></STRONG><DD>
+<DT><STRONG><A NAME="item__c">-c file</A></STRONG><DD>
+<P>
+Append a copy of each deleted message to <EM>file</EM>.
+
+<DT><STRONG><A NAME="item__debug">--debug</A></STRONG><DD>
+<P>
+Turn debugging on.
+
+<DT><STRONG><A NAME="item__help">--help</A></STRONG><DD>
+<P>
+Show the help and die.
+
+<DT><STRONG><A NAME="item__newline">--newline s</A></STRONG><DD>
+<P>
+Use s as the line terminator rather than guessing based on the first line
+of each file.
+
+<DT><STRONG><A NAME="item__newline_native">--newline-native</A></STRONG><DD>
+<P>
+Use this platform's native line terminator rather than guessing based on
+the first line of each file.
+
+<DT><STRONG><A NAME="item__no">--no</A></STRONG><DD>
+<DT><STRONG><A NAME="item__n">-n</A></STRONG><DD>
+<P>
+Don't actually modify any files, just go through the motions.
+
+<DT><STRONG><A NAME="item__quiet">--quiet</A></STRONG><DD>
+<P>
+Suppress informational messages.
+
+<DT><STRONG><A NAME="item__verbose">--verbose</A></STRONG><DD>
+<P>
+Output additional informational messages.
+
+<DT><STRONG><A NAME="item__version">--version</A></STRONG><DD>
+<P>
+Show the version and exit.
+
+</DL>
+<P>
+<HR>
+<H1><A NAME="OPTIONS_MESSAGE_SELECTION">OPTIONS - MESSAGE SELECTION</A></H1>
+<P>
+If multiple rules are given they all have to match for a message to be
+purged.
+
+<DL>
+<DT><STRONG><A NAME="item__before">--before date-time</A></STRONG><DD>
+<DT><STRONG><A NAME="item__before_or_at">--before-or-at date-time</A></STRONG><DD>
+<DT><STRONG><A NAME="item__after">--after date-time</A></STRONG><DD>
+<DT><STRONG><A NAME="item__after_or_at">--after-or-at date-time</A></STRONG><DD>
+<P>
+Purge messages which were delivered in the specified period. The date/time
+parsing is flexible, as provided by Date::Parse. I usually use <EM>YYYY</EM>-<EM>MM</EM>-<EM>DD</EM>  <EM>HH</EM>:<EM>MM</EM>:<EM>SS</EM>. If you leave off the time it defaults to 00:00:00.
+
+<DT><STRONG><A NAME="item__pattern">--pattern pat</A></STRONG><DD>
+<P>
+Purge messages which match <EM>pat</EM>. The pattern is run against the message after its mbox-style encoding has
+been unescaped. The match uses Perl's //m flag.
+
+<DT><STRONG><A NAME="item__head_pattern">--head-pattern pat</A></STRONG><DD>
+<P>
+Purge messages which match <EM>pat</EM>. The pattern is run against the message after its mbox-style encoding has
+been unescaped. The match uses Perl's //m flag.
+
+<P>
+Additionally, the headers have line continuations undone (newline followed
+by whitespace is replaced with a single space) before the match.
+
+<DT><STRONG><A NAME="item__body_pattern">--body-pattern pat</A></STRONG><DD>
+<P>
+Purge messages whose bodies match <EM>pat</EM>. The pattern is run against the message after its mbox-style encoding has
+been unescaped. The match uses Perl's //m flag.
+
+<DT><STRONG><A NAME="item__eval">--eval code</A></STRONG><DD>
+<P>
+Evaluate <EM>code</EM> and purge the message if it returns true.  <EM>code</EM> is compiled as the body of a subroutine. The subroutine receives references
+to the head, body and full text of the message as its arguments. The head
+argument has had continuation lines undone, and the body in both of the
+second arguments has had its mbox encoding unescaped. See also <A HREF="#CONVENIENCE_SUBS">CONVENIENCE SUBS</A>.
+
+<DT><STRONG><A NAME="item__head_eval">--head-eval code</A></STRONG><DD>
+<P>
+Like <STRONG>--eval</STRONG> but the only arg passed to the <EM>code</EM> is a reference to the message header. Use this if you don't need the
+message body, to avoid having to put it in memory.
+
+</DL>
+<P>
+<HR>
+<H1><A NAME="CONVENIENCE_SUBS">CONVENIENCE SUBS</A></H1>
+<P>
+Here are some subs you can use from code passed in via <STRONG>-eval</STRONG>:
+
+<DL>
+<DT><STRONG><A NAME="item_delivery_time">delivery_time</A></STRONG><DD>
+<P>
+Return the epoch <CODE>time()</CODE> when the message was delivered, as
+read from the From_ line.
+
+<DT><STRONG><A NAME="item_envelope_sender">envelope_sender</A></STRONG><DD>
+<P>
+Return the envelope sender, as read from the From_ line.
+
+<DT><STRONG><A NAME="item_file_name">file_name</A></STRONG><DD>
+<P>
+Return the name of the file being processed.
+
+<DT><STRONG><A NAME="item_header_all">header_all header_pattern</A></STRONG><DD>
+<P>
+Return the data part of all the header lines whose field names match
+<EM>header_pattern</EM>. Eg,
+
+<P>
+<PRE>    my @recv = header_all 'Received';
+</PRE>
+<DT><STRONG><A NAME="item_header_first">header_first header_pattern</A></STRONG><DD>
+<DT><STRONG><A NAME="item_header_last">header_last header_pattern</A></STRONG><DD>
+<P>
+These are like <STRONG>header_all</STRONG>, but they only return the first or last matching header.
+
+<DT><STRONG><A NAME="item_mbox_append">mbox_append file, ref-to-string</A></STRONG><DD>
+<P>
+Append the <EM>ref-to-string</EM> to the mbox-format <EM>file</EM>, doing appropriate escaping and locking. Typically <EM>ref-to-string</EM> will be <CODE>$_[2]</CODE>.
+
+<DT><STRONG><A NAME="item_mozilla_expunged">mozilla_expunged</A></STRONG><DD>
+<P>
+True if the message has been marked as expunged by Mozilla. Such messages
+are effectively deleted, but haven't been removed from the mailbox file
+yet.
+
+<DT><STRONG><A NAME="item_msg_num">msg_num</A></STRONG><DD>
+<P>
+Return the index of this message in the current file (starts at 1).
+
+<DT><STRONG><A NAME="item_parse_date">parse_date str</A></STRONG><DD>
+<P>
+Return the epoch <CODE>time()</CODE> which corresponds to <EM>str</EM>, or <STRONG>undef</STRONG>.
+
+</DL>
+<P>
+<HR>
+<H1><A NAME="EXAMPLES">EXAMPLES</A></H1>
+<P>
+<PRE>    # Delete messages older than the given date from all your folders.
+</PRE>
+<P>
+<PRE>    mbox-purge --before 2000-05-01 ~/Mail/*
+</PRE>
+<P>
+<PRE>    # Delete messages from April 2000.
+</PRE>
+<P>
+<PRE>    mbox-purge --after-or-at 2000-04-01 --before 2000-05-01 file
+</PRE>
+<P>
+<PRE>    # Move messages delivered in the year 2000 from the listed files
+    # into a single file.
+</PRE>
+<P>
+<PRE>    mbox-purge --after-or-at 2000-01-01 --before 2001-01-01 \
+        --copy-to 2000.mbox file1 file2 file3
+</PRE>
+<P>
+<PRE>    # Delete a chain letter from all user's mailboxes.
+</PRE>
+<P>
+<PRE>    mbox-purge \
+        --head-pattern '^Subject: (Re: )?GOOD LUCK TOTEM( \(fwd\))?$' \
+        /var/spool/mail/*
+</PRE>
+<P>
+<PRE>    # Perform equivalent of Mozilla folder compaction.
+</PRE>
+<P>
+<PRE>    mbox-purge --eval mozilla_expunged file
+</PRE>
+<P>
+<PRE>    # Delete messages larger than 1M.
+</PRE>
+<P>
+<PRE>    mbox-purge --eval 'length ${ $_[2] } &gt; 1_000_000' file
+</PRE>
+<P>
+<PRE>    # Delete messages older than 6 months from all your folders.
+</PRE>
+<P>
+<PRE>    mbox-purge --eval 'time - delivery_time &gt; 60*60*24 * 31 * 6' ~/Mail/*
+</PRE>
+<P>
+<PRE>    # Same, but use the Date: field's date rather than the delivery date.
+</PRE>
+<P>
+<PRE>    mbox-purge --eval 'time - parse_date(header_first &quot;Date&quot;)
+                        &gt; 60*60*24 * 31 * 6' ~/Mail/*
+</PRE>
+<P>
+<PRE>    # Move messages older than 6 months into by-year archive folders, keeping
+    # separate archives for each source folder.  Eg, for ~/Mail/sent you
+    # get ~/Mail/sent.2000, ~/Mail/sent.2001, etc.
+</PRE>
+<P>
+<PRE>    find ~/Mail ! -name '*.[0-9][0-9][0-9][0-9]' ! -name '.*' -type f \
+        -print0 | xargs -0r mbox-purge \
+        --eval '
+            return 0 if time - delivery_time() &lt; 60*60*24 * 31 * 6;
+            require POSIX;
+            my $year = POSIX::strftime(&quot;%Y&quot;, localtime delivery_time);
+            mbox_append file_name . &quot;.$year&quot;, $_[2];
+            1'
+</PRE>
+<P>
+<HR>
+<H1><A NAME="BUGS">BUGS</A></H1>
+<P>
+You can't delete from your mail spool on a system which doesn't have a
+world-writable spool directory if you're a regular user, both because
+<STRONG>mbox-purge</STRONG> doesn't know to special-case <STRONG>lockfile</STRONG>'s invocation for that and because it creates the temporary file in the
+same directory as the file it is processing.
+
+<P>
+<HR>
+<H1><A NAME="CHANGES">CHANGES</A></H1>
+<P>
+<PRE>  $Log: mbox-purge,v $
+  Revision 1.23  2007-04-11 12:32:48-04  roderick
+  Typo.
+</PRE>
+<P>
+<PRE>  Revision 1.22  2007-04-06 16:19:54-04  roderick
+  Add --copy-to, --before-or-at, --after-or-at.
+</PRE>
+<P>
+<PRE>  Add convenience subs:  mbox_append(), file_name(), msg_num().
+</PRE>
+<P>
+<PRE>  Touch lock files periodically so other processes don't think they're
+  stale.
+</PRE>
+<P>
+<PRE>  Revision 1.21  2006-11-22 14:13:00-05  roderick
+  Support differing line terminators ($/); guess the right value on a
+  file-by-file basis by default.  Add --newline, --newline-native to
+  override this.
+</PRE>
+<P>
+<PRE>  Avoid holding a whole message body in memory when possible by using the
+  (new) callback-enabled version of mbox_read_body().  Add --head-eval to
+  make it possible in more cases.
+</PRE>
+<P>
+<PRE>  Add -n as alias for --no.
+</PRE>
+<P>
+<PRE>  Add mozilla_expunged() convenience sub.
+</PRE>
+<P>
+<PRE>  Revision 1.20  2006-10-17 10:07:20-04  roderick
+  Use chompexpr_fileline.
+</PRE>
+<P>
+<PRE>  Revision 1.19  2006-09-08 09:31:39-04  roderick
+  Also check the file's size when detecting modifications.
+</PRE>
+<P>
+<PRE>  When you modify a mailbox remove a .msf file (Mozilla index) if present.
+</PRE>
+<P>
+<PRE>  Revision 1.18  2005-03-01 11:57:15-05  roderick
+  Oops, set $File_name correctly.
+</PRE>
+<P>
+<PRE>  Revision 1.17  2004-09-02 10:49:57-04  roderick
+  Important changes:
+</PRE>
+<P>
+<PRE>      Use the delivery date rather than the Date: header for --before and
+      --after.
+</PRE>
+<P>
+<PRE>      Add and prefer --switch to -switch, but still allow the latter for
+      old switches.
+</PRE>
+<P>
+<PRE>      Add convenience subs:  delivery_time(), envelope_sender(), header_all(),
+      header_first(), header_last().
+</PRE>
+<P>
+<PRE>      Add --help, --no, --quiet, --verbose, --version.
+</PRE>
+<P>
+<PRE>  Less important:
+</PRE>
+<P>
+<PRE>      If no messages were purged from a file, leave it as is rather than
+      replacing it with the new (identical) copy.
+</PRE>
+<P>
+<PRE>      Treat a parsed date of -1 as undef.
+</PRE>
+<P>
+<PRE>      Add %Message_info, $File_name, $Msg_num.
+</PRE>
+<P>
+<PRE>      Improve the usage message.
+</PRE>
+<P>
+<PRE>      For --eval, turn off strict vars, and don't let the user get at my
+      lexicals.
+</PRE>
+<P>
+<PRE>      Don't trap signals which were ignored.
+</PRE>
+<P>
+<HR>
+<H1><A NAME="AUTHOR">AUTHOR</A></H1>
+<P>
+Roderick Schertler &lt;<EM>roderick@argon.org</EM>&gt;
+
+</BODY>
+
+</HTML>
