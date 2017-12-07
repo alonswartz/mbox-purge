@@ -11,6 +11,7 @@ use sigtrap qw(die untrapped normal-signals);
 
 use POSIX		qw(:errno_h);
 use Proc::WaitStat	qw(waitstat_die);
+use File::Copy		qw(copy);
 use RS::Handy		qw(:stat $Me
 			    badinvo chompexpr_fileline dstr data_dump
 			    exclusive_create mbox_read_head mbox_read_body
@@ -566,8 +567,10 @@ sub main {
 		or xdie "error unlinking $new_file:"
 	}
 	else {
-	    rename $new_file, $File_name
-		or xdie "error renaming $new_file to $File_name:";
+	    copy $new_file, $File_name
+		or xdie "error copying $new_file to $File_name:";
+	    unlink $new_file
+		or xwarn "error unlinking $new_file:";
 
 	    # $file.msf is a Mozilla index file, it isn't valid since
 	    # $file has changed.  Remove it so Mozilla will regenerate
